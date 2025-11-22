@@ -1,0 +1,7 @@
+/drone/
+├── main.py
+├── motor_controller.py
+├── led_controller.py
+├── camera_stream.py
+├── network_receiver.py
+└── config.yaml
