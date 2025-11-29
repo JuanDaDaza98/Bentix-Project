@@ -1,0 +1,7 @@
+gpiozero
+RPi.GPIO
+spidev
+adafruit-blinka
+adafruit-circuitpython-ina260
+numpy
+opencv-python
