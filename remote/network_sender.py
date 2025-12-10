@@ -1,9 +1,7 @@
 # network_sender.py -> RPI REMOTE
 import socket
-from time import sleep
 import time
 import threading
-import json
 
 class DroneSender:
     def __init__(self, ip="192.168.4.3", control_port=5000, video_port=5001, telemetry_port=5002):
@@ -33,7 +31,7 @@ class DroneSender:
     #  TELEMETRÍA TCP RECEIVER  (escucha al dron)
     # ============================================================
     def _listen_telemetry_tcp(self):
-        print(f"🔌 Esperando telemetría DRON en TCP puerto {self.telemetry_port}...")
+        print(f"Esperando telemetría DRON en TCP puerto {self.telemetry_port}...")
 
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -42,7 +40,7 @@ class DroneSender:
 
         while True:
             client, addr = server.accept()
-            print(f"📡 Telemetría conectada desde {addr}")
+            print(f"Telemetría conectada desde {addr}")
 
             try:
                 while True:
@@ -50,16 +48,21 @@ class DroneSender:
                     if not data:
                         break
 
-                    voltage, current, soc = data.decode().split(",")
-
-                    self.telemetry["voltage"] = float(voltage)
-                    self.telemetry["current"] = float(current)
-                    self.telemetry["battery_percent"] = float(soc)
+                    try:
+                        parts = data.decode().strip().split(",")
+                        if len(parts) >= 3:
+                            voltage, current, soc = parts[0], parts[1], parts[2]
+                            self.telemetry["voltage"] = float(voltage)
+                            self.telemetry["current"] = float(current)
+                            self.telemetry["battery_percent"] = float(soc)
+                    except (ValueError, IndexError) as parse_err:
+                        print(f"Error parseando telemetría: {parse_err}")
+                        continue
 
             except Exception as e:
                 print(f"[TEL ERROR] {e}")
 
-            print("🔌 Telemetría desconectada, esperando reconexión...")
+            print("Telemetría desconectada, esperando reconexión...")
 
     # ============================================================
     #   CONTROL (TCP)
@@ -71,16 +74,16 @@ class DroneSender:
 
         while True:
             try:
-                print("📡 Intentando conectar al dron (controles)...")
+                print("Intentando conectar al dron (controles)...")
                 self.control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.control_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self.control_socket.settimeout(3.0)
                 self.control_socket.connect((self.ip, self.control_port))
                 self.control_socket.settimeout(None)
-                print("✅ Conectado al dron (controles).")
+                print("Conectado al dron (controles).")
                 break
             except socket.error as e:
-                print(f"⏳ Esperando conexión de controles... ({e})")
+                print(f"Esperando conexión de controles... ({e})")
                 time.sleep(2)
 
     # ============================================================
@@ -93,16 +96,16 @@ class DroneSender:
 
         while True:
             try:
-                print("📺 Intentando conectar al dron (video)...")
+                print("Intentando conectar al dron (video)...")
                 self.video_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.video_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self.video_socket.settimeout(3.0)
                 self.video_socket.connect((self.ip, self.video_port))
                 self.video_socket.settimeout(None)
-                print("✅ Conectado al dron (video).")
+                print("Conectado al dron (video).")
                 break
             except socket.error as e:
-                print(f"⏳ Esperando conexión de video... ({e})")
+                print(f"Esperando conexión de video... ({e})")
                 time.sleep(2)
 
     # ============================================================
@@ -120,7 +123,7 @@ class DroneSender:
             self.control_socket.settimeout(None)
 
         except Exception as e:
-            print(f"❌ Conexión perdida en controles. Reintentando... ({e})")
+            print(f"Conexión perdida en controles. Reintentando... ({e})")
             try: self.control_socket.close()
             except: pass
             self._setup_control_connection()
@@ -131,3 +134,10 @@ class DroneSender:
     # ============================================================
     def get_video_socket(self):
         return self.video_socket
+
+    # ============================================================
+    #   OBTENER TELEMETRÍA DEL DRON
+    # ============================================================
+    def get_telemetry(self):
+        """Retorna la telemetría actual recibida del dron."""
+        return self.telemetry.copy()

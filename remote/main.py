@@ -11,13 +11,10 @@ sender = DroneSender()
 
 connected = True
 
-# ----------------------------
-# TELEMETRÍA DEL DRON (PRUEBA)
-# ----------------------------
-drone_telemetry = {"battery_percent": 67, "current": 2.35}
 
 def get_drone_telemetry():
-    return drone_telemetry
+    """Obtiene la telemetría real recibida del dron."""
+    return sender.get_telemetry()
 
 
 def control_loop():
@@ -35,7 +32,7 @@ def control_loop():
 
             sleep(0.1)
     except KeyboardInterrupt:
-        print("🛑 Finalizando controlador...")
+        print("Finalizando controlador...")
 
 
 def get_battery_data():
@@ -51,10 +48,16 @@ if __name__ == "__main__":
     t_control = Thread(target=control_loop)
     t_control.start()
 
-    # Esperar socket de video
+    # Esperar socket de video con timeout
+    timeout_counter = 0
+    max_timeout = 60  # 30 segundos (60 * 0.5s)
     while sender.get_video_socket() is None:
-        print("⏳ Esperando conexión de video...")
+        print("Esperando conexión de video...")
         sleep(0.5)
+        timeout_counter += 1
+        if timeout_counter >= max_timeout:
+            print("Timeout: Video no conectado, pero continuando...")
+            break
 
     # Hilo de video con telemetría del dron
     t_video = Thread(

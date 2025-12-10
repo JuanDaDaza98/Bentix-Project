@@ -26,9 +26,9 @@ def battery_monitor_loop():
     try:
         i2c = busio.I2C(board.SCL, board.SDA)
         ina = INA260(i2c, address=INA260_ADDR)
-        print("🔋 INA260 inicializado.")
+        print("INA260 inicializado.")
     except Exception as e:
-        print(f"⚠️ Error inicializando INA260: {e}")
+        print(f"Error inicializando INA260: {e}")
         while True:
             battery_data["ok"] = False
             time.sleep(1)

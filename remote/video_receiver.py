@@ -15,8 +15,15 @@ ASSETS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Bent
 def load_png(name):
     path = os.path.join(ASSETS_DIR, name)
     if os.path.exists(path):
-        return cv2.imread(path, cv2.IMREAD_UNCHANGED)  # keep alpha if present
-    return None
+        img = cv2.imread(path, cv2.IMREAD_UNCHANGED)  # keep alpha if present
+        if img is not None:
+            return img
+        else:
+            print(f"No se pudo leer la imagen: {name}")
+            return None
+    else:
+        print(f"Archivo no encontrado: {name}")
+        return None
 
 
 def overlay_image_alpha(img, overlay, x, y, overlay_size=None):
@@ -101,7 +108,7 @@ def draw_battery_icon(frame, x, y, soc):
 
 def receive_video_stream(video_socket_getter, remote_batt_getter, drone_telemetry_getter):
 
-    print("🎥 Receptor de video iniciado...")
+    print("Receptor de video iniciado...")
 
     cv2.namedWindow("Video del Dron", cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty("Video del Dron", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
@@ -170,7 +177,7 @@ def receive_video_stream(video_socket_getter, remote_batt_getter, drone_telemetr
             cv2.rectangle(frame, (2, 2), (frame.shape[1]-3, frame.shape[0]-3), (217,100,24), 8)
 
             # ======================================================
-            # 1️⃣ BATERÍA DEL CONTROL (INA LOCAL)
+            # BATERÍA DEL CONTROL (INA LOCAL)
             # ======================================================
             remote_bat = remote_batt_getter()
 
@@ -181,7 +188,7 @@ def receive_video_stream(video_socket_getter, remote_batt_getter, drone_telemetr
                 cv2.putText(frame, f"{remote_bat['current']:.2f} A", (40, 35 + 25 + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
             # ======================================================
-            # 2️⃣ BATERÍA + AMPERAJE DEL DRON (TELEMETRÍA REMOTA)
+            # BATERÍA + AMPERAJE DEL DRON (TELEMETRÍA REMOTA)
             # ======================================================
             drone = drone_telemetry_getter()
 
@@ -210,6 +217,9 @@ def receive_video_stream(video_socket_getter, remote_batt_getter, drone_telemetr
                 return
 
         except Exception as e:
-            print(f"⚠️ Error de video: {e}")
+            print(f"Error de video: {e}")
             data = b""
+            # Pequeña pausa antes de reintentar
+            import time
+            time.sleep(1)
             continue

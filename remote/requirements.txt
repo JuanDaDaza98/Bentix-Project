@@ -1,7 +1,7 @@
-gpiozero
-RPi.GPIO
-spidev
-adafruit-blinka
-adafruit-circuitpython-ina260
-numpy
-opencv-python
+gpiozero>=2.0
+RPi.GPIO>=0.7.1
+spidev>=3.6
+adafruit-blinka>=8.0.0
+adafruit-circuitpython-ina260>=1.3.0
+numpy>=1.24.0,<2.0.0
+opencv-python>=4.8.0
